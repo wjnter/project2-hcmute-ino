@@ -6,6 +6,8 @@ RTC_DS1307 rtc;
 LiquidCrystal_I2C lcd(0x27,2,1,0,4,5,6,7,3, POSITIVE);
 
 char daysOfTheWeek[7][12] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+int outputPin = A0;
+float analogValue = 0;
 
 void setup () 
 {
@@ -32,7 +34,7 @@ void setup ()
 
 void loop () 
 {
-//    DateTime now = rtc.now();
+    //đặt 50 lần => delay gần 2s
     for (int i = 0; i < 50; i++) {
       DateTime now = rtc.now();
     
@@ -96,4 +98,12 @@ void loop ()
       }
       delay(1);
     }
+
+    analogValue = analogRead(outputPin);
+    float millivolts = (analogValue/1023.0) * 2900; //3300 is the voltage provided by NodeMCU
+    float celsius = millivolts/10;
+    lcd.setCursor(0, 3);
+    lcd.print("in DegreeC:  ");
+    lcd.println(celsius);
+    Serial.println(celsius);
 }
