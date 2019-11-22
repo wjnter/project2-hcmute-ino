@@ -182,6 +182,16 @@ void loop ()
       
       controlBulb1();
       controlBulb2();
+
+      if (now.minute() == 21 ) {
+        digitalWrite(bulb2, HIGH);
+        delay(100);
+        digitalWrite(bulb2, LOW);
+        delay(100);
+      } else 
+      if (now.minute() == 23) {
+        digitalWrite(bulb2, LOW);
+      }
     }
 
     analogValue = analogRead(outputPin);
