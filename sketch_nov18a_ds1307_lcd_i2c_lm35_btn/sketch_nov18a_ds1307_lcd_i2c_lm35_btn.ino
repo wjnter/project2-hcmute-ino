@@ -5,6 +5,8 @@
 RTC_DS1307 rtc;
 LiquidCrystal_I2C lcd(0x27,2,1,0,4,5,6,7,3, POSITIVE);
 
+char strChuc[2];
+char strDonvi[2];
 char daysOfTheWeek[7][12] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
 
 int outputPin = A0;
@@ -228,16 +230,11 @@ void loop ()
       controlBulb2();
       controlFan();
       changeMode();
-
-      if (now.minute() == 21 ) {
-        digitalWrite(bulb2, HIGH);
-        delay(100);
-        digitalWrite(bulb2, LOW);
-        delay(100);
-      } else 
-      if (now.minute() == 23) {
-        digitalWrite(bulb2, LOW);
-      }
+      
+      sprintf(strChuc, "%d", now.day()/10);
+      Serial.print("Chuoi chuc: "); Serial.println(strChuc + 3);
+      sprintf(strDonvi, "%d", now.day()%10);
+      Serial.print("Chuoi donvi: "); Serial.println(strDonvi);
     }
 
     analogValue = analogRead(outputPin);
@@ -245,6 +242,6 @@ void loop ()
     float celsius = millivolts/10;
     lcd.setCursor(0, 3);
     lcd.print("Nhiet do: ");
-    lcd.println(celsius);
-    Serial.println(celsius);
+    lcd.print(celsius);
+    Serial.println(celsius, 2);
 }

@@ -1,0 +1,43 @@
+[
+  {
+    "id":1,
+    "ten":"den1",
+    "giatri":null,
+    "thoigiandoc":null,
+    "trangthai":false,
+    "chedo":false,
+    "thoigianmo":"16:24:00",
+    "thoigiantat":"20:32:00"
+  },
+  {
+    "id":2,
+    "ten":"den2",
+    "giatri":null,
+    "thoigiandoc":null,
+    "trangthai":true,
+    "chedo":false,
+    "thoigianmo":"16:24:00",
+    "thoigiantat":"20:32:00"
+  },
+  {
+    "id":3,
+    "ten":"quat",
+    "giatri":null,
+    "thoigiandoc":null,
+    "trangthai":true,
+    "chedo":false,
+    "thoigianmo":"16:24:00",
+    "thoigiantat":"20:32:00"
+  },
+  {
+    "id":1,
+    "ten":"cbnhietdo",
+    "giatri":30,
+    "thoigiandoc":2,
+    "trangthai":null,
+    "chedo":null,
+    "thoigianmo":null,
+    "thoigiantat":null
+  }
+]
+  
