@@ -284,7 +284,7 @@ void setup() {
   lcd.setCursor(0, 2);
   lcd.print("Che do: ");
   lcd.setCursor(8, 2);
-  if (statusMode) {
+  if (chedo) {
     Serial.println("Chế độ tự động");
     lcd.print("AUTOMA");
   } else {
@@ -444,18 +444,39 @@ void loop() {
               Serial.print("chedo: "); Serial.println(chedo);
               Serial.print("thoigianmo: "); Serial.println(thoigianmo);
               Serial.print("thoigiantat: "); Serial.println(thoigiantat);
-            
+              if (trangthaiDen1) {
+                Serial.print("Đèn 1 mở: "); Serial.println(trangthaiDen1);
+                digitalWrite(bulb1, HIGH);
+              } else {
+                Serial.print("Đèn 1 mở: "); Serial.println(trangthaiDen1);
+                digitalWrite(bulb1, LOW);
+              }
+              
               Serial.println("Đèn 2");
                // Đèn 2
               const char* tenDen2 = den2["ten"];
               long trangthaiDen2 = den2["trangthai"];
-              
+              if (trangthaiDen2) {
+                Serial.print("Đèn 2 mở: "); Serial.println(trangthaiDen2);
+                digitalWrite(bulb2, HIGH);
+              } else {
+                Serial.print("Đèn 2 mở: "); Serial.println(trangthaiDen2);
+                digitalWrite(bulb2, LOW);
+              }
               Serial.print("ten: "); Serial.println(tenDen2);
               Serial.print("trangthai: "); Serial.println(trangthaiDen2);
             
               Serial.println("Quạt");
               const char* tenQuat = quat["ten"];
               long trangthaiQuat = quat["trangthai"];
+              
+              if (trangthaiQuat) {
+                Serial.print("Quạt mở: "); Serial.println(trangthaiQuat);
+                digitalWrite(fan, HIGH);
+              } else {
+                Serial.print("Quạt mở: "); Serial.println(trangthaiQuat);
+                digitalWrite(fan, LOW);
+              }
               
               Serial.print("ten: "); Serial.println(tenQuat);
               Serial.print("trangthai: "); Serial.println(trangthaiQuat);
@@ -497,10 +518,13 @@ void loop() {
               thoigianmo = den1["thoigianmo"].as<String>();
               thoigiantat = den1["thoigiantat"].as<String>();
               
-              if (chedo)
-                Serial.println("Chế độ Tự động ");
-                else
-                Serial.println("Chế độ Thủ công");
+              if (chedo) {
+                Serial.println("Chế độ tự động");
+                lcd.print("AUTOMA");
+              } else {
+                Serial.println("Chế độ tự chỉnh"); 
+                lcd.print("MANUAL");
+              }
               Serial.print("thoigianmo: "); Serial.println(thoigianmo);
               Serial.print("thoigiantat: "); Serial.println(thoigiantat);
               
