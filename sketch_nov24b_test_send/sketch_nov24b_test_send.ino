@@ -12,13 +12,24 @@ LiquidCrystal_I2C lcd(0x27,2,1,0,4,5,6,7,3, POSITIVE);
 
 char daysOfTheWeek[7][12] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
 
-char onHourTens[2];
-char onHourUnits[2];
-char offHourTens[2];
-char offHourUnits[2];
+char onHourTens[2];     char onHourUnits[2];
+char onMinuteTens[2];   char onMinuteUnits[2];
+char offHourTens[2];    char offHourUnits[2];
+char offMinuteTens[2];  char offMinuteUnits[2];
+
+bool flag = true;
+bool isArr = false;
+bool isArrTheFirst = false;
+bool chedo = true;
+bool trangthai = false;
+float giatri = 0;
+String ten = "";
 
 int outputPin = A0;
 float analogValue = 0;
+float millivolts = 0;
+float celsius = 0;
+float prevCelsius = 0;
 
 const int btnFan = 13;  //D7
 const int btnBulb2 = 0; //D3
@@ -36,19 +47,21 @@ bool statusFan = false;
 bool statusMode = false; //mode false => manual, true => auto
 
 boolean handshakeFailed=0;
-String data= "";
 
-//String json = "{\"id\":1,\"ten\":\"den1\",\"giatri\":0,\"thoigiandoc\":0,\"trangthai\":true,\"chedo\":false,\"thoigianmo\":\"16:24:00\",\"thoigiantat\":\"20:32:00\"}";
-//char json[] = "{\"id\":1,\"ten\":\"den1\",\"giatri\":0,\"thoigiandoc\":0,\"trangthai\":true,\"chedo\":false,\"thoigianmo\":\"16:24:00\",\"thoigiantat\":\"20:32:00\"}";
+//biến dữ liệu lấy về từ server - data
+String data= "";
+String thoigianmo = "00:00:00";
+String thoigiantat = "00:00:01";
+//biến dữ liệu gửi lên server - json
 String json = "";
 
 char path[] = "/realtime-data";   //identifier of this device
 
-//const char* ssid     = "80 dqh lau 2.2";
-//const char* password = "80duongquangham";
+const char* ssid     = "80 dqh lau 2.2";
+const char* password = "80duongquangham";
 
-const char* ssid     = "Wjnter";
-const char* password = "Nguyenpt99";
+//const char* ssid     = "Wjnter";
+//const char* password = "Nguyenpt99";
 
 char* host = "doan21.j.layershift.co.uk";  //thay domain vao
 const int espport=8080;
@@ -68,7 +81,7 @@ void controlBulb1() {
   if (!digitalRead(btnBulb1)) {
     delay(30);
     if (!digitalRead(btnBulb1)) {
-      if (statusMode) {
+      if (chedo) {
         Serial.println("Không thể điều khiển ở chế độ tự động");
         while (!digitalRead(btnBulb1));
       } else {
@@ -80,8 +93,8 @@ void controlBulb1() {
         jsonBulb1["thoigiandoc"] = 0;
         jsonBulb1["trangthai"]   = statusBulb1;
         jsonBulb1["chedo"]   = false;
-        jsonBulb1["thoigianmo"] = "00:24:00";
-        jsonBulb1["thoigiantat"] = "20:32:00";
+        jsonBulb1["thoigianmo"] = thoigianmo;
+        jsonBulb1["thoigiantat"] = thoigiantat;
 
         serializeJson(jsonBulb1, Serial);
         serializeJson(jsonBulb1, json);
@@ -108,7 +121,7 @@ void controlBulb2() {
   if (!digitalRead(btnBulb2)) {
     delay(30);
     if (!digitalRead(btnBulb2)) {
-      if (statusMode) {
+      if (chedo) {
         Serial.println("Không thể điều khiển ở chế độ tự động");
         while (!digitalRead(btnBulb2));
       } else {
@@ -120,8 +133,8 @@ void controlBulb2() {
         jsonBulb2["thoigiandoc"] = 0;
         jsonBulb2["trangthai"]   = statusBulb2;
         jsonBulb2["chedo"]   = false;
-        jsonBulb2["thoigianmo"] = "00:24:00";
-        jsonBulb2["thoigiantat"] = "20:32:00";
+        jsonBulb2["thoigianmo"] = thoigianmo;
+        jsonBulb2["thoigiantat"] = thoigiantat;
 
         serializeJson(jsonBulb2, Serial);
         serializeJson(jsonBulb2, json);
@@ -147,7 +160,7 @@ void controlFan() {
   if (!digitalRead(btnFan)) {
     delay(30);
     if (!digitalRead(btnFan)) {
-      if (statusMode) {
+      if (chedo) {
         Serial.println("Không thể điều khiển ở chế độ tự động");
         while (!digitalRead(btnFan));
       } else {
@@ -158,8 +171,9 @@ void controlFan() {
         jsonFan["thoigiandoc"] = 0;
         jsonFan["trangthai"]   = statusFan;
         jsonFan["chedo"]   = false;
-        jsonFan["thoigianmo"] = "00:24:00";
-        jsonFan["thoigiantat"] = "20:32:00";
+        jsonFan["thoigianmo"] = thoigianmo;
+        jsonFan["thoigiantat"] = thoigiantat;
+
 
         serializeJson(jsonFan, Serial);
         serializeJson(jsonFan, json);
@@ -180,20 +194,67 @@ void controlFan() {
 
 
 void changeMode() {
+  StaticJsonDocument<1024> jsonMode;
   if (!digitalRead(btnMode)) {
     delay(30);
     if (!digitalRead(btnMode)) {
       statusMode = !statusMode;
       while (!digitalRead(btnMode));
-      if (statusMode) {
-        Serial.println("Chế độ tự động");
-        lcd.setCursor(8, 2);
-        lcd.print("AUTOMA");
-      } else {
-        Serial.println("Chế độ tự chỉnh"); 
-        lcd.setCursor(8, 2);
-        lcd.print("MANUAL");
-      }
+
+//    JsonObject obj1 = jsonMode.createNestedObject();
+//    obj1["id"] = 1;
+//    obj1["ten"] = "den1";
+//    obj1["giatri"] = 0;
+//    obj1["thoigiandoc"] = 0;
+//    obj1["trangthai"] = false;
+//    obj1["chedo"] = statusMode;
+//    obj1["thoigianmo"] = thoigianmo;
+//    obj1["thoigiantat"] = thoigiantat;
+//    
+//    JsonObject obj2 = jsonMode.createNestedObject();
+//    obj2["id"] = 2;
+//    obj2["ten"] = "den2";
+//    obj2["giatri"] = 0;
+//    obj2["thoigiandoc"] = 0;
+//    obj2["trangthai"] = false;
+//    obj2["chedo"] = statusMode;
+//    obj2["thoigianmo"] = thoigianmo;
+//    obj2["thoigiantat"] = thoigiantat;
+//    
+//    JsonObject obj3 = jsonMode.createNestedObject();
+//    obj3["id"] = 3;
+//    obj3["ten"] = "quat";
+//    obj3["giatri"] = 0;
+//    obj3["thoigiandoc"] = 0;
+//    obj3["trangthai"] = false;
+//    obj3["chedo"] = statusMode;
+//    obj3["thoigianmo"] = thoigianmo;
+//    obj3["thoigiantat"] = thoigiantat;
+      jsonMode["id"] = 3;
+      jsonMode["ten"] = "quat";
+      jsonMode["giatri"] = 0;
+      jsonMode["thoigiandoc"] = 0;
+      jsonMode["trangthai"]   = false;
+      jsonMode["chedo"]   = statusMode;
+      jsonMode["thoigianmo"] = thoigianmo;
+      jsonMode["thoigiantat"] = thoigiantat;
+  
+      serializeJson(jsonMode, Serial);
+      serializeJson(jsonMode, json);
+  //        Send data to Server
+      webSocketClient.sendData(json);
+      json = "";
+
+    
+//      if (statusMode) {
+//        Serial.println("Chế độ tự động");
+//        lcd.setCursor(8, 2);
+//        lcd.print("AUTOMA");
+//      } else {
+//        Serial.println("Chế độ tự chỉnh"); 
+//        lcd.setCursor(8, 2);
+//        lcd.print("MANUAL");
+//      }
     }
   }
 }
@@ -348,76 +409,196 @@ void loop() {
         webSocketClient.getData(data);    
         if (data.length() > 0) {
           Serial.println(data);
-          
-          DynamicJsonDocument doc(1024);
-          deserializeJson(doc, data);
-          
-          String ten = doc["ten"];
-          bool trangthai          = doc["trangthai"];
-          bool chedo    = doc["chedo"];
-          String thoigianmo = doc["thoigianmo"];
-          String thoigiantat = doc["thoigiantat"];
-
-          sprintf(onHourTens, "%d", now.hour()/10);
-          sprintf(onHourUnits, "%d", now.hour()%10);
-
-          sprintf(offHourTens, "%d", now.hour()/10);
-          sprintf(offHourUnits, "%d", now.hour()%10);
-
-          Serial.print("So sanh gio mo: ");
-          if (*onHourTens == thoigianmo[0] && *onHourUnits == thoigianmo[1]) {
-            Serial.println("Trung khop ne");
-          } else {
-            Serial.println("Khong trung roi, huhu");
-          }
-          Serial.print("So sanh gio tat: ");
-          if (*offHourTens == thoigiantat[0] && *offHourUnits == thoigiantat[1]) {
-            Serial.println("Trung khop ne");
-          } else {
-            Serial.println("Khong trung roi, huhu");
-          }
-//        Chế độ CHỈNH TAY
-          if (!chedo) {
-            
-//          Điều khiển đèn 1
-            if (ten == "den1") {
-              if (trangthai) {
-                Serial.print("Đèn 1 mở: "); Serial.println(trangthai);
-                digitalWrite(bulb1, HIGH);
-              } else {
-                Serial.print("Đèn 1 mở: "); Serial.println(trangthai);
-                digitalWrite(bulb1, LOW);
+          if (flag) {
+            StaticJsonDocument<1024> doc;
+            // Parse the JSON input
+            DeserializationError err = deserializeJson(doc, data);
+            JsonObject object1 = doc.as<JsonObject>();
+            //Kiểm tra, nếu là nút chế độ thì là arr, bình thường là obj
+            isArrTheFirst = object1.isNull();
+            if (isArrTheFirst) {
+              // Parse succeeded?
+              if (err) {
+              Serial.print(F("deserializeJson() returned "));
+              Serial.println(err.c_str());
+              return;
               }
-            } else
+              // Get the first element of the array
+              JsonObject den1 = doc[0];
+              JsonObject den2 = doc[1];
+              JsonObject quat = doc[2];
+              JsonObject nhietdo = doc[3];
             
-  //          Điều khiển đèn 2
-            if (ten == "den2") {
-              if (trangthai) {
-                Serial.print("Đèn 2 mở: "); Serial.println(trangthai);
-                digitalWrite(bulb2, HIGH);
-              } else {
-                Serial.print("Đèn 2 mở: "); Serial.println(trangthai);
-                digitalWrite(bulb2, LOW);
-              }
-            } else
+              Serial.println("Đèn 1");
+              // Đèn 1
+              const char* tenDen1 = den1["ten"];
+              long trangthaiDen1 = den1["trangthai"];
+              bool chedo = den1["chedo"];
+              thoigianmo = den1["thoigianmo"].as<String>();
+              thoigiantat = den1["thoigiantat"].as<String>();
+
+              statusMode = chedo;
+              
+              Serial.print("ten: "); Serial.println(tenDen1);
+              Serial.print("trangthai: "); Serial.println(trangthaiDen1);
+              Serial.print("chedo: "); Serial.println(chedo);
+              Serial.print("thoigianmo: "); Serial.println(thoigianmo);
+              Serial.print("thoigiantat: "); Serial.println(thoigiantat);
             
-  //          Điều khiển quạt
-            if (ten == "quat") {
-              if (trangthai) {
-                Serial.print("Quạt mở: "); Serial.println(trangthai);
-                digitalWrite(fan, HIGH);
-              } else {
-                Serial.print("Quạt mở: "); Serial.println(trangthai);
-                digitalWrite(fan, LOW);
-              }
+              Serial.println("Đèn 2");
+               // Đèn 2
+              const char* tenDen2 = den2["ten"];
+              long trangthaiDen2 = den2["trangthai"];
+              
+              Serial.print("ten: "); Serial.println(tenDen2);
+              Serial.print("trangthai: "); Serial.println(trangthaiDen2);
+            
+              Serial.println("Quạt");
+              const char* tenQuat = quat["ten"];
+              long trangthaiQuat = quat["trangthai"];
+              
+              Serial.print("ten: "); Serial.println(tenQuat);
+              Serial.print("trangthai: "); Serial.println(trangthaiQuat);
+            
+              Serial.println("Nhiệt độ");
+               // Nhiệt độ
+              const char* tenNhietDo = nhietdo["ten"];
+              float giatriNhietDo = nhietdo["giatri"];
+              
+              Serial.print("ten: "); Serial.println(tenNhietDo);
+              Serial.print("giatri: "); Serial.print(giatriNhietDo); Serial.println("do C");  
+            } else {
+//              ten = doc["ten"].as<String>();
+//              trangthai = doc["trangthai"];
+//              chedo = doc["chedo"];
+//              giatri = doc["giatri"];
+//              thoigianmo = doc["thoigianmo"].as<String>();
+//              thoigiantat = doc["thoigiantat"].as<String>();  
+              Serial.println("Chờ xíu lần đầu lỗi do không gửi data về được.. ");
             }
-//        Chế độ TỰ ĐỘNG
-          } else {
             
+            
+           flag = false;
+          } else {
+            DynamicJsonDocument doc(1024);
+            deserializeJson(doc, data);
+  
+            JsonObject object = doc.as<JsonObject>();
+            //Kiểm tra, nếu là nút chế độ thì là arr, bình thường là obj
+            isArr = object.isNull();
+  
+            if (isArr) {
+              //làm gì đó khi web gửi về chế độ
+              Serial.println("Server gửi về chế độ.." );
+              JsonObject den1 = doc[0];
+              //  Serial.println("Đèn 1");
+              // Đèn 1
+              chedo = den1["chedo"];
+              thoigianmo = den1["thoigianmo"].as<String>();
+              thoigiantat = den1["thoigiantat"].as<String>();
+              
+              if (chedo)
+                Serial.println("Chế độ Tự động ");
+                else
+                Serial.println("Chế độ Thủ công");
+              Serial.print("thoigianmo: "); Serial.println(thoigianmo);
+              Serial.print("thoigiantat: "); Serial.println(thoigiantat);
+              
+            } else {
+              ten = doc["ten"].as<String>();
+              trangthai = doc["trangthai"];
+              chedo = doc["chedo"];
+              giatri = doc["giatri"];
+              thoigianmo = doc["thoigianmo"].as<String>();
+              thoigiantat = doc["thoigiantat"].as<String>();  
+            }
+            
+            
+  
+           
+  //        Chế độ CHỈNH TAY
+            if (!chedo) {
+              
+  //          Điều khiển đèn 1
+              if (ten == "den1") {
+                statusBulb1 = trangthai;
+                if (trangthai) {
+                  Serial.print("Đèn 1 mở: "); Serial.println(trangthai);
+                  digitalWrite(bulb1, HIGH);
+                } else {
+                  Serial.print("Đèn 1 mở: "); Serial.println(trangthai);
+                  digitalWrite(bulb1, LOW);
+                }
+              } else
+              
+    //          Điều khiển đèn 2
+              if (ten == "den2") {
+                statusBulb2 = trangthai;
+                if (trangthai) {
+                  Serial.print("Đèn 2 mở: "); Serial.println(trangthai);
+                  digitalWrite(bulb2, HIGH);
+                } else {
+                  Serial.print("Đèn 2 mở: "); Serial.println(trangthai);
+                  digitalWrite(bulb2, LOW);
+                }
+              } else
+              
+    //          Điều khiển quạt
+              if (ten == "quat") {
+                statusFan = trangthai;
+                if (trangthai) {
+                  Serial.print("Quạt mở: "); Serial.println(trangthai);
+                  digitalWrite(fan, HIGH);
+                } else {
+                  Serial.print("Quạt mở: "); Serial.println(trangthai);
+                  digitalWrite(fan, LOW);
+                }
+              } else
+              //Hiển thị nhiệt độ
+              if (ten =="cbnhietdo") {
+                lcd.setCursor(0, 3);
+                lcd.print("Nhiet do: ");
+                lcd.print(giatri);
+                Serial.println(celsius, 2);
+              }
+  //        Chế độ TỰ ĐỘNG
+            } else {
+               //Ép kiểu thời gian về String
+              sprintf(onHourTens, "%d", now.hour()/10);
+              sprintf(onHourUnits, "%d", now.hour()%10);
+    
+              sprintf(offHourTens, "%d", now.hour()/10);
+              sprintf(offHourUnits, "%d", now.hour()%10);
+    
+              sprintf(onMinuteTens, "%d", now.minute()/10);
+              sprintf(onMinuteUnits, "%d", now.minute()%10);
+    
+              sprintf(offMinuteTens, "%d", now.minute()/10);
+              sprintf(offMinuteUnits, "%d", now.minute()%10);
+    
+              bool isMatchOnHour = *onHourTens == thoigianmo[0] && *onHourUnits == thoigianmo[1];
+              bool isMatchOnMin = *onMinuteTens == thoigianmo[3] && *onMinuteUnits == thoigianmo[4];
+              bool isMatchOnTime = isMatchOnHour && isMatchOnMin;
+              bool isMatchOffHour = *offHourTens == thoigiantat[0] && *offHourUnits == thoigiantat[1] ;
+              bool isMatchOffMin = *offMinuteTens == thoigiantat[3] && *offMinuteUnits == thoigiantat[4];
+              bool isMatchOffTime = isMatchOffHour && isMatchOffMin;
+    
+              Serial.print("So sánh thời gian mở: ");
+              //Kiểm tra giờ, phút đọc từ DS1307 với  giờ, phút được gửi về từ server (thoigianmo)
+              if (isMatchOnTime) {
+                Serial.println("Trùng khớp thời gian mở");
+                
+              } else {
+                Serial.println("không trùng khớp thời gian mở rồi, huhu");
+              }
+              Serial.print("So sánh thời gian tắt: ");
+              if (isMatchOffTime) {
+                Serial.println("Trùng khớp thời gian tắt");
+              } else {
+                Serial.println("Không trùng thời gian tắt rồi, huhu");
+              }
+            }     
           }
-
-
-          
           data="";
         }   
         delay(5);
@@ -425,6 +606,32 @@ void loop() {
           wsconnect();
         }
     }
+    analogValue = analogRead(outputPin);
+    millivolts = (analogValue/1023.0) * 2900; //3300 is the voltage provided by NodeMCU
+    celsius = millivolts/10;
+
+//    if (prevCelsius != celsius) {
+//      DynamicJsonDocument jsonTemp(1024);
+//      jsonTemp["id"] = 1;
+//      jsonTemp["ten"] = "cbnhietdo";
+//      jsonTemp["giatri"] = celsius;
+//      jsonTemp["thoigiandoc"] = 0;
+//      jsonTemp["trangthai"]   = false;
+//      jsonTemp["chedo"]   = false;
+//      jsonTemp["thoigianmo"] = thoigianmo;
+//      jsonTemp["thoigiantat"] = thoigiantat;
+//  
+//      serializeJson(jsonTemp, Serial);
+//      serializeJson(jsonTemp, json);
+//  //        Send data to Server
+//      webSocketClient.sendData(json);
+//      json = "";
+//      
+//      prevCelsius = celsius;
+//    }
+    
+    
+    
 }
 //*********************************************************************************************************************
 //***************function definitions**********************************************************************************
