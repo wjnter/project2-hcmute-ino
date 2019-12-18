@@ -12,10 +12,11 @@ LiquidCrystal_I2C lcd(0x27,2,1,0,4,5,6,7,3, POSITIVE);
 
 char daysOfTheWeek[7][12] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
 
-char onHourTens[2];     char onHourUnits[2];
-char onMinuteTens[2];   char onMinuteUnits[2];
-char offHourTens[2];    char offHourUnits[2];
-char offMinuteTens[2];  char offMinuteUnits[2];
+int onHourTens = 0;   int onHourUnits = 0;  int onHour = 0;
+int offHourTens = 0;  int offHourUnits = 0; int offHour = 0;
+
+int onMinuteTens = 0;   int onMinuteUnits = 0;  int onMinute = 0;
+int offMinuteTens = 0;  int offMinuteUnits = 0; int offMinute = 0;
 
 bool flag = true;
 bool isArr = false;
@@ -34,7 +35,7 @@ float prevCelsius = 0;
 const int btnFan = 13;  //D7
 const int btnBulb2 = 0; //D3
 const int btnBulb1 = 2; //D4
-const int btnMode = 12;  //D0
+const int btnMode = 12;  //D6
 
 
 const int bulb1 = D5;
@@ -55,15 +56,14 @@ String thoigiantat = "00:00:01";
 //biến dữ liệu gửi lên server - json
 String json = "";
 
-char path[] = "/realtime-data";   //identifier of this device
+char path[] = "/realtime-data?username=dangtruongsinh&password=123";   //identifier of this device
 
 const char* ssid     = "80 dqh lau 2.2";
 const char* password = "80duongquangham";
+//const char* ssid     = "D304-1_NoPassword";
+//const char* password = "NoPassword";
 
-//const char* ssid     = "Wjnter";
-//const char* password = "Nguyenpt99";
-
-char* host = "doan21.j.layershift.co.uk";  //thay domain vao
+char* host = "smarthome.j.layershift.co.uk";  //thay domain vao
 const int espport=8080;
   
 WebSocketClient webSocketClient;
@@ -201,35 +201,6 @@ void changeMode() {
       statusMode = !statusMode;
       while (!digitalRead(btnMode));
 
-//    JsonObject obj1 = jsonMode.createNestedObject();
-//    obj1["id"] = 1;
-//    obj1["ten"] = "den1";
-//    obj1["giatri"] = 0;
-//    obj1["thoigiandoc"] = 0;
-//    obj1["trangthai"] = false;
-//    obj1["chedo"] = statusMode;
-//    obj1["thoigianmo"] = thoigianmo;
-//    obj1["thoigiantat"] = thoigiantat;
-//    
-//    JsonObject obj2 = jsonMode.createNestedObject();
-//    obj2["id"] = 2;
-//    obj2["ten"] = "den2";
-//    obj2["giatri"] = 0;
-//    obj2["thoigiandoc"] = 0;
-//    obj2["trangthai"] = false;
-//    obj2["chedo"] = statusMode;
-//    obj2["thoigianmo"] = thoigianmo;
-//    obj2["thoigiantat"] = thoigiantat;
-//    
-//    JsonObject obj3 = jsonMode.createNestedObject();
-//    obj3["id"] = 3;
-//    obj3["ten"] = "quat";
-//    obj3["giatri"] = 0;
-//    obj3["thoigiandoc"] = 0;
-//    obj3["trangthai"] = false;
-//    obj3["chedo"] = statusMode;
-//    obj3["thoigianmo"] = thoigianmo;
-//    obj3["thoigiantat"] = thoigiantat;
       jsonMode["id"] = 3;
       jsonMode["ten"] = "quat";
       jsonMode["giatri"] = 0;
@@ -245,16 +216,6 @@ void changeMode() {
       webSocketClient.sendData(json);
       json = "";
 
-    
-//      if (statusMode) {
-//        Serial.println("Chế độ tự động");
-//        lcd.setCursor(8, 2);
-//        lcd.print("AUTOMA");
-//      } else {
-//        Serial.println("Chế độ tự chỉnh"); 
-//        lcd.setCursor(8, 2);
-//        lcd.print("MANUAL");
-//      }
     }
   }
 }
@@ -433,11 +394,19 @@ void loop() {
               // Đèn 1
               const char* tenDen1 = den1["ten"];
               long trangthaiDen1 = den1["trangthai"];
-              bool chedo = den1["chedo"];
+              chedo = den1["chedo"];
               thoigianmo = den1["thoigianmo"].as<String>();
               thoigiantat = den1["thoigiantat"].as<String>();
 
               statusMode = chedo;
+              lcd.setCursor(8, 2);
+              if (chedo) {
+                Serial.println("Chế độ tự động");
+                lcd.print("AUTOMA");
+              } else {
+                Serial.println("Chế độ tự chỉnh"); 
+                lcd.print("MANUAL");
+              }
               
               Serial.print("ten: "); Serial.println(tenDen1);
               Serial.print("trangthai: "); Serial.println(trangthaiDen1);
@@ -488,13 +457,7 @@ void loop() {
               
               Serial.print("ten: "); Serial.println(tenNhietDo);
               Serial.print("giatri: "); Serial.print(giatriNhietDo); Serial.println("do C");  
-            } else {
-//              ten = doc["ten"].as<String>();
-//              trangthai = doc["trangthai"];
-//              chedo = doc["chedo"];
-//              giatri = doc["giatri"];
-//              thoigianmo = doc["thoigianmo"].as<String>();
-//              thoigiantat = doc["thoigiantat"].as<String>();  
+            } else { 
               Serial.println("Chờ xíu lần đầu lỗi do không gửi data về được.. ");
             }
             
@@ -511,13 +474,14 @@ void loop() {
             if (isArr) {
               //làm gì đó khi web gửi về chế độ
               Serial.println("Server gửi về chế độ.." );
+              //Khi chọn TỰ động hay tự chỉnh thì cũng phải giữ trang thái.. 
               JsonObject den1 = doc[0];
               //  Serial.println("Đèn 1");
               // Đèn 1
               chedo = den1["chedo"];
               thoigianmo = den1["thoigianmo"].as<String>();
               thoigiantat = den1["thoigiantat"].as<String>();
-              
+              lcd.setCursor(8, 2);
               if (chedo) {
                 Serial.println("Chế độ tự động");
                 lcd.print("AUTOMA");
@@ -539,10 +503,11 @@ void loop() {
             
             
   
-           
+           lcd.setCursor(8, 2);
   //        Chế độ CHỈNH TAY
             if (!chedo) {
-              
+              Serial.println("Chế độ tự chỉnh"); 
+              lcd.print("MANUAL");
   //          Điều khiển đèn 1
               if (ten == "den1") {
                 statusBulb1 = trangthai;
@@ -587,40 +552,69 @@ void loop() {
               }
   //        Chế độ TỰ ĐỘNG
             } else {
-               //Ép kiểu thời gian về String
-              sprintf(onHourTens, "%d", now.hour()/10);
-              sprintf(onHourUnits, "%d", now.hour()%10);
-    
-              sprintf(offHourTens, "%d", now.hour()/10);
-              sprintf(offHourUnits, "%d", now.hour()%10);
-    
-              sprintf(onMinuteTens, "%d", now.minute()/10);
-              sprintf(onMinuteUnits, "%d", now.minute()%10);
-    
-              sprintf(offMinuteTens, "%d", now.minute()/10);
-              sprintf(offMinuteUnits, "%d", now.minute()%10);
-    
-              bool isMatchOnHour = *onHourTens == thoigianmo[0] && *onHourUnits == thoigianmo[1];
-              bool isMatchOnMin = *onMinuteTens == thoigianmo[3] && *onMinuteUnits == thoigianmo[4];
-              bool isMatchOnTime = isMatchOnHour && isMatchOnMin;
-              bool isMatchOffHour = *offHourTens == thoigiantat[0] && *offHourUnits == thoigiantat[1] ;
-              bool isMatchOffMin = *offMinuteTens == thoigiantat[3] && *offMinuteUnits == thoigiantat[4];
-              bool isMatchOffTime = isMatchOffHour && isMatchOffMin;
+              Serial.println("Chế độ tự động");
+              lcd.print("AUTOMA");
+              //Chuyển thời gian về Integer
+              onHourTens = thoigianmo[0] - 48;
+              onHourUnits = thoigianmo[1] - 48;
+              onMinuteTens = thoigianmo[3] - 48;
+              onMinuteUnits = thoigianmo[4] - 48;
+              offHourTens = thoigiantat[0] - 48;
+              offHourUnits = thoigiantat[1] - 48;
+              offMinuteTens = thoigiantat[3] - 48;
+              offMinuteUnits = thoigiantat[4] - 48;                    
+              
+              onHour = onHourTens*10 + onHourUnits;
+              onMinute = onMinuteTens*10 + onMinuteUnits;
+              offHour = offHourTens*10 + offHourUnits;
+              offMinute = offMinuteTens*10 + offMinuteUnits;
     
               Serial.print("So sánh thời gian mở: ");
+
+              if ((now.hour() > onHour) && (now.hour() < offHour)) {
+                Serial.println("Opening bulb 1");
+              } else 
+              if ((now.hour() == onHour) || (now.hour() == offHour)) {
+                if (now.minute() >= onMinute) {
+                  if (now.minute() < offMinute) {
+                    Serial.println("Opening bulb 2");
+                  }
+                }
+              } else {
+                Serial.print("Nothing onHour");
+              }
+              
+              if ((now.hour() < onHour) || (now.hour() > offHour)) {
+                Serial.println("Turning off bulb 1");
+              } else 
+              if ((now.hour() == onHour) || (now.hour() == offHour)) {
+                if ((now.minute() < onMinute) || (now.minute() >= offMinute)) {
+                  Serial.println("Turning off bulb 2");
+                }
+              } else {
+                Serial.println("Nothing offHour");
+              }
+              
               //Kiểm tra giờ, phút đọc từ DS1307 với  giờ, phút được gửi về từ server (thoigianmo)
-              if (isMatchOnTime) {
-                Serial.println("Trùng khớp thời gian mở");
-                
-              } else {
-                Serial.println("không trùng khớp thời gian mở rồi, huhu");
-              }
-              Serial.print("So sánh thời gian tắt: ");
-              if (isMatchOffTime) {
-                Serial.println("Trùng khớp thời gian tắt");
-              } else {
-                Serial.println("Không trùng thời gian tắt rồi, huhu");
-              }
+//              if (isMatchOnTime) {
+//                Serial.println("Thiết bị MỞ... TỰ ĐỘNG");
+//                digitalWrite(bulb1, HIGH);
+//                digitalWrite(bulb2, HIGH);
+//                digitalWrite(fan, HIGH);
+//              } else {
+//                Serial.println("Chưa đến giờ MỞ");
+//              }
+//              Serial.print("So sánh thời gian tắt: ");
+//              if (isMatchOffTime) {
+//                Serial.println("Thiết bị TẮT... TỰ ĐỘNG");
+//                digitalWrite(bulb1, LOW);
+//                digitalWrite(bulb2, LOW);
+//                digitalWrite(fan, LOW);
+//              } else {
+//                Serial.println("Chưa đến giờ TẮT");
+//              }
+
+            
             }     
           }
           data="";

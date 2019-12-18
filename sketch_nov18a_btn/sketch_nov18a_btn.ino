@@ -11,7 +11,7 @@ LiquidCrystal_I2C lcd(0x27,2,1,0,4,5,6,7,3, POSITIVE);
 const int btnFan = 13;  //D7
 const int btnBulb2 = 0; //D3
 const int btnBulb1 = 2; //D4
-const int btnMode = 12;  //D0
+const int btnMode = 12;  //D6
 
 
 const int bulb1 = D5;

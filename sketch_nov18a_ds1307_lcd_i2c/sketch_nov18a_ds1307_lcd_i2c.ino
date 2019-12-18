@@ -6,6 +6,10 @@ RTC_DS1307 rtc;
 LiquidCrystal_I2C lcd(0x27,2,1,0,4,5,6,7,3, POSITIVE);
 
 char daysOfTheWeek[7][12] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+int onHour = 23;
+int onMinute = 56;
+int offHour = 23;
+int offMinute = 57;
 
 void setup () 
 {
@@ -62,6 +66,7 @@ void loop ()
       }
       else {
        lcd.print(now.second()); 
+       Serial.println(now.second());
       }
       lcd.print("   ");
   
@@ -95,5 +100,36 @@ void loop ()
        lcd.print(now.year()); 
       }
       delay(1);
+
+      
+      if ((now.hour() > onHour) && (now.hour() < offHour)) {
+        Serial.println("Opening bulb 1");
+      } else 
+      if ((now.hour() == onHour) || (now.hour() == offHour)) {
+        if (now.minute() >= onMinute) {
+          if (now.minute() < offMinute) {
+            Serial.println("Opening bulb 2");
+          }
+        }
+      } else {
+        Serial.print("Nothing onHour");
+      }
+      
+      if ((now.hour() < onHour) || (now.hour() > offHour)) {
+        Serial.println("Turning off bulb 1");
+      } else 
+      if ((now.hour() == onHour) || (now.hour() == offHour)) {
+        if ((now.minute() < onMinute) || (now.minute() >= offMinute)) {
+          Serial.println("Turning off bulb 2");
+        }
+      } else {
+        Serial.println("Nothing offHour");
+      }
+
+      
     }
+
+    
+    
+    
 }
