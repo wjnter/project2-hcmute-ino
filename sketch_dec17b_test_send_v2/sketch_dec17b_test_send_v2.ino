@@ -243,8 +243,8 @@ void setup() {
     lcd.print("RTC is NOT running!");
   }
   
-    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));//auto update from computer time
-//    rtc.adjust(DateTime(2019, 11, 18, 22, 54, 0));// to set the time manualy 
+//    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));//auto update from computer time
+//    rtc.adjust(DateTime(2019, 12, 24, 14, 7, 0));// to set the time manualy 
 
 
   delay(10);
@@ -277,7 +277,11 @@ wsconnect();
 void loop() {
 
 //đặt 50 lần => delay gần 2s
-  for (int i = 0; i < 1000; i++) {
+  for (int i = 0; i < 150; i++) {
+//    lcd.clear();
+//    lcd.setCursor(0, 2);
+//    lcd.print("Che do: ");
+//    lcd.setCursor(8, 2);
     DateTime now = rtc.now();
     lcd.setCursor(6, 1);
     if(now.hour()<=9)
@@ -381,7 +385,6 @@ void loop() {
           Serial.println("Chế độ tự chỉnh"); 
           lcd.print("MANUAL");
         }
-        Serial.print("ten: "); Serial.println(tenDen1);
         Serial.print("trangthai: "); Serial.println(trangthaiDen1);
         Serial.print("chedo: "); Serial.println(chedo);
         Serial.print("thoigianmo: "); Serial.println(thoigianmo);
@@ -393,7 +396,6 @@ void loop() {
         long trangthaiDen2 = den2["trangthai"];
         statusBulb2 = trangthaiDen2;
         
-        Serial.print("ten: "); Serial.println(tenDen2);
         Serial.print("trangthai: "); Serial.println(trangthaiDen2);
         
         Serial.println("Quạt");
@@ -402,7 +404,6 @@ void loop() {
         long trangthaiQuat = quat["trangthai"];
         statusFan = trangthaiQuat;
             
-        Serial.print("ten: "); Serial.println(tenQuat);
         Serial.print("trangthai: "); Serial.println(trangthaiQuat);
 
         Serial.println("Nhiệt độ");
@@ -410,7 +411,6 @@ void loop() {
         const char* tenNhietDo = nhietdo["ten"];
         float giatriNhietDo = nhietdo["giatri"];
         
-        Serial.print("ten: "); Serial.println(tenNhietDo);
         Serial.print("giatri: "); Serial.print(giatriNhietDo); Serial.println("do C");  
 
         lcd.setCursor(8, 2);
@@ -448,20 +448,38 @@ void loop() {
             lcd.print("MANUAL");
 //          Điều khiển đèn 1
             
-            if (prevStatusBulb1 != statusBulb1) {
-              prevStatusBulb1 = statusBulb1;
-              if (statusBulb1) {
+//            if (prevStatusBulb1 != statusBulb1) {
+//              prevStatusBulb1 = statusBulb1;
+//              if (statusBulb1) {
+//                Serial.print("Đèn 1 mở: "); Serial.println(statusBulb1);
+//                digitalWrite(bulb1, HIGH);
+//              } else {
+//                Serial.print("Đèn 1 mở: "); Serial.println(statusBulb1);
+//                digitalWrite(bulb1, LOW);
+//              }
+//            }
+
+                if (statusBulb1) {
                 Serial.print("Đèn 1 mở: "); Serial.println(statusBulb1);
                 digitalWrite(bulb1, HIGH);
               } else {
                 Serial.print("Đèn 1 mở: "); Serial.println(statusBulb1);
                 digitalWrite(bulb1, LOW);
               }
-            }
+
 //          Điều khiển đèn 2
 
-            if (prevStatusBulb2 != statusBulb2) {
-              prevStatusBulb2 = statusBulb2;
+//            if (prevStatusBulb2 != statusBulb2) {
+//              prevStatusBulb2 = statusBulb2;
+//              if (statusBulb2) {
+//                Serial.print("Đèn 2 mở: "); Serial.println(statusBulb2);
+//                digitalWrite(bulb2, HIGH);
+//              } else {
+//                Serial.print("Đèn 2 mở: "); Serial.println(statusBulb2);
+//                digitalWrite(bulb2, LOW);
+//              }
+//            }
+
               if (statusBulb2) {
                 Serial.print("Đèn 2 mở: "); Serial.println(statusBulb2);
                 digitalWrite(bulb2, HIGH);
@@ -469,24 +487,30 @@ void loop() {
                 Serial.print("Đèn 2 mở: "); Serial.println(statusBulb2);
                 digitalWrite(bulb2, LOW);
               }
-            }
+              
 //          Điều khiển quạt
 
-            if (prevStatusFan != statusFan) {
-              prevStatusFan = statusFan;
-              if (statusFan) {
+//            if (prevStatusFan != statusFan) {
+//              prevStatusFan = statusFan;
+//              if (statusFan) {
+//                Serial.print("Quạt mở: "); Serial.println(statusFan);
+//                digitalWrite(fan, HIGH);
+//              } else {
+//                Serial.print("Quạt mở: "); Serial.println(statusFan);
+//                digitalWrite(fan, LOW);
+//              }
+//            }
+//            Serial.println("alo alo");
+//            Serial.println(giatriNhietDo, 2);
+
+            if (statusFan) {
                 Serial.print("Quạt mở: "); Serial.println(statusFan);
                 digitalWrite(fan, HIGH);
               } else {
                 Serial.print("Quạt mở: "); Serial.println(statusFan);
                 digitalWrite(fan, LOW);
               }
-            }
-//          Hiển thị nhiệt độ
-            lcd.setCursor(0, 3);
-            lcd.print("Nhiet do: ");
-            lcd.print(giatriNhietDo);
-            Serial.println(giatriNhietDo, 2);
+              
 //          Chế độ TỰ ĐỘNG
           } else {
             Serial.println("Chế độ tự động ..");
@@ -508,23 +532,35 @@ void loop() {
             
             Serial.print("So sánh thời gian mở: ");
             if ((now.hour() > onHour) && (now.hour() < offHour)) {
-              Serial.println("Opening bulb 1");
+              Serial.print("Đèn 1 mở: ");
+              digitalWrite(bulb1, HIGH);
+              Serial.print("Đèn 2 mở: ");
+              digitalWrite(bulb2, HIGH);
             } else 
             if ((now.hour() == onHour) || (now.hour() == offHour)) {
               if (now.minute() >= onMinute) {
                 if (now.minute() < offMinute) {
-                  Serial.println("Opening bulb 2");
+                  Serial.print("Đèn 1 mở: ");
+                  digitalWrite(bulb1, HIGH);
+                  Serial.print("Đèn 2 mở: ");
+                  digitalWrite(bulb2, HIGH);
                 }
               }
             } else {
               Serial.print("Nothing onHour");
             }
             if ((now.hour() < onHour) || (now.hour() > offHour)) {
-              Serial.println("Turning off bulb 1");
+              Serial.print("Đèn 1 đóng: ");
+                digitalWrite(bulb1, LOW);
+                Serial.print("Đèn 2 đóng: ");
+                digitalWrite(bulb2, LOW);
             } else 
             if ((now.hour() == onHour) || (now.hour() == offHour)) {
               if ((now.minute() < onMinute) || (now.minute() >= offMinute)) {
-                Serial.println("Turning off bulb 2");
+                Serial.print("Đèn 1 đóng: ");
+                  digitalWrite(bulb1, LOW);
+                  Serial.print("Đèn 2 đóng: ");
+                  digitalWrite(bulb2, LOW);
               }
             } else {
               Serial.println("Nothing offHour");
@@ -542,6 +578,12 @@ void loop() {
   analogValue = analogRead(outputPin);
   millivolts = (analogValue/1023.0) * 3300; //3300 is the voltage provided by NodeMCU
   celsius = millivolts/10;
+//          Hiển thị nhiệt độ
+  lcd.setCursor(0, 3);
+  lcd.print("Nhiet do: ");
+  lcd.print(celsius);
+
+  
   DynamicJsonDocument jsonTemp(1024);
   jsonTemp["id"] = 1;
   jsonTemp["ten"] = "cbnhietdo";

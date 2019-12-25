@@ -28,8 +28,8 @@ void setup ()
     lcd.print("RTC is NOT running!");
   }
   
-    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));//auto update from computer time
-//    rtc.adjust(DateTime(2019, 11, 18, 22, 54, 0));// to set the time manualy 
+//    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));//auto update from computer time
+    rtc.adjust(DateTime(2019, 11, 18, 22, 54, 0));// to set the time manualy 
 }
 
 void loop () 
@@ -100,7 +100,7 @@ void loop ()
     }
 
     analogValue = analogRead(outputPin);
-    float millivolts = (analogValue/1023.0) * 2900; //3300 is the voltage provided by NodeMCU
+    float millivolts = (analogValue/1023.0) * 3300; //3300 is the voltage provided by NodeMCU
     float celsius = millivolts/10;
     lcd.setCursor(0, 3);
     lcd.print("in DegreeC:  ");
