@@ -218,7 +218,7 @@ void setup() {
 
   digitalWrite(bulb1, LOW);
   digitalWrite(bulb2, LOW);
-  digitalWrite(fan, LOW);
+  digitalWrite(fan, HIGH);
   
   lcd.begin(20,4);   
   lcd.setCursor(0, 0);
@@ -247,7 +247,7 @@ void setup() {
   }
   
 //    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));//auto update from computer time
-    rtc.adjust(DateTime(2019, 12, 29, 21, 13, 0));// to set the time manualy 
+//    rtc.adjust(DateTime(2019, 12, 29, 21, 13, 0));// to set the time manualy 
 
 
   delay(10);
@@ -439,10 +439,10 @@ void loop() {
 //          Điều khiển quạt
           if (trangthaiQuat) {
             Serial.print("Quạt mở: "); Serial.println(trangthaiQuat);
-            digitalWrite(fan, HIGH);
+            digitalWrite(fan, LOW);
           } else {
             Serial.print("Quạt mở: "); Serial.println(trangthaiQuat);
-            digitalWrite(fan, LOW);
+            digitalWrite(fan, HIGH);
           }
           flag = false;
         } else {
@@ -509,10 +509,10 @@ void loop() {
 
             if (statusFan) {
                 Serial.print("Quạt mở: "); Serial.println(statusFan);
-                digitalWrite(fan, HIGH);
+                digitalWrite(fan, LOW);
               } else {
                 Serial.print("Quạt mở: "); Serial.println(statusFan);
-                digitalWrite(fan, LOW);
+                digitalWrite(fan, HIGH);
               }
               
 //          Chế độ TỰ ĐỘNG
